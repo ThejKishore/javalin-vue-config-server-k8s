@@ -1,20 +1,21 @@
 package com.tk.learn.configserver.config
 
-import org.koin.dsl.module
-import org.jdbi.v3.core.Jdbi
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer
-import kotlinx.datetime.Instant
-import com.tk.learn.configserver.repository.*
-import com.tk.learn.configserver.service.*
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tk.learn.configserver.controller.ConfigController
+import com.tk.learn.configserver.repository.*
+import com.tk.learn.configserver.service.ConfigService
+import com.tk.learn.configserver.service.ConfigServiceImpl
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import kotlinx.datetime.Instant
+import org.jdbi.v3.core.Jdbi
+import org.koin.dsl.module
 import javax.sql.DataSource
 
 /**
@@ -90,12 +91,12 @@ fun configServerModule() = module {
 
     // Services
     single<ConfigService> {
-        ConfigServiceImpl(get(), get(), get())
+        ConfigServiceImpl(get(), get(), get(), get())
     }
 
     // Controllers
     single {
-        ConfigController(get(), get())
+        ConfigController(get())
     }
 }
 

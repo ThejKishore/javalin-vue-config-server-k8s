@@ -1,23 +1,73 @@
-# pltform-mgmt
+# pltform-mgmt — Platform Configuration Management
 
-This project uses [Gradle](https://gradle.org/).
-To build and run the application, use the *Gradle* tool window by clicking the Gradle icon in the right-hand toolbar,
-or run it directly from the terminal:
+This repository contains a Kotlin + Javalin backend and a small Vue 3 static frontend (served from the backend). It's a platform configuration management app used to onboard services, manage properties, and view audit history.
 
-* Run `./gradlew run` to build and run the application.
-* Run `./gradlew build` to only build the application.
-* Run `./gradlew check` to run all checks, including tests.
-* Run `./gradlew clean` to clean all build outputs.
+## Quick start — build & run
 
-Note the usage of the Gradle Wrapper (`./gradlew`).
-This is the suggested way to use Gradle in production projects.
+```bash
+# Build the project and run checks
+./gradlew build
 
-[Learn more about the Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html).
+# Run the application (production-style)
+java -jar build/libs/pltform-mgmt.jar
 
-[Learn more about Gradle tasks](https://docs.gradle.org/current/userguide/command_line_interface.html#common_tasks).
+# Or run in development mode
+./gradlew run
+```
 
-This project follows the suggested multi-module setup and consists of the `app` and `utils` subprojects.
-The shared build logic was extracted to a convention plugin located in `buildSrc`.
+Application URL (default): [http://localhost:7070](http://localhost:7070)
 
-This project uses a version catalog (see `gradle/libs.versions.toml`) to declare and version dependencies
-and both a build cache and a configuration cache (see `gradle.properties`).
+## Project layout (important folders)
+
+- `src/main/kotlin` — app entry and common code
+- `configserver/src/main/kotlin` — controllers, services, repositories
+- `shared/src/main/kotlin` — shared domain models
+- `src/main/resources/public` — frontend static files (HTML, JS, CSS)
+- `documents/` — all markdown documentation (developer guides, testing, architecture)
+
+## Developer workflow
+
+- Edit backend Kotlin code → `./gradlew build` to compile
+- Edit frontend static files under `src/main/resources/public` → refresh browser to see changes
+- No separate frontend build step; static files are served by the backend
+
+## Tests & checks
+
+```bash
+# Run checks and unit tests
+./gradlew check
+
+# Clean build artifacts
+./gradlew clean
+```
+
+## Documentation (start here)
+
+All documentation was moved to `documents/`. Key files:
+
+- `documents/README.md` — Developer quick start (this project)
+- `documents/QUICK_START_TESTING.md` — Quick testing guide for UI
+- `documents/IMPLEMENTATION_GUIDE.md` — How components work & customization
+- `documents/DELETE_FEATURE_TESTING.md` — Test cases for delete feature
+- `documents/FINAL_STATUS_REPORT.md` — Final status & verification
+- `documents/START_HERE.md` — High-level index and reading paths
+
+## Contributing
+
+- Follow existing project style (Kotlin and ES6)
+- Add docs under `documents/` and update `DOCUMENTATION_INDEX.md`
+- Create small, focused commits
+
+## Need help?
+
+- Check `documents/` for detailed guides and testing instructions
+- For runtime issues, inspect server logs or browser console
+
+## Notes
+
+- Gradle wrapper (`./gradlew`) is included — use it for reproducible builds
+- This project uses an in-memory H2 DB for local/testing environments
+
+---
+
+Last updated: January 10, 2026

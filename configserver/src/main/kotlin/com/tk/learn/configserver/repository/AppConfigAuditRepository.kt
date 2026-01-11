@@ -10,6 +10,10 @@ import org.jdbi.v3.core.statement.StatementContext
 import java.sql.ResultSet
 import java.sql.SQLException
 
+private const val APPCONF_ID = "id"
+private const val APPLICATION_NAME = "application_name"
+private const val COLUMN = "domain"
+
 /**
  * Row mapper for AppConfigAudit
  */
@@ -18,9 +22,9 @@ class AppConfigAuditRowMapper : RowMapper<AppConfigAudit> {
     @Throws(SQLException::class)
     override fun map(rs: ResultSet, ctx: StatementContext): AppConfigAudit {
         return AppConfigAudit(
-            id = rs.getLong("id"),
-            applicationName = rs.getString("application_name"),
-            domain = rs.getString("domain"),
+            id = rs.getLong(APPCONF_ID),
+            applicationName = rs.getString(APPLICATION_NAME),
+            domain = rs.getString(COLUMN),
             propertyKey = rs.getString("property_key"),
             oldPropertyValue = rs.getString("old_property_value"),
             newPropertyValue = rs.getString("new_property_value"),
@@ -62,7 +66,7 @@ class AppConfigAuditRepositoryImpl(private val jdbi: Jdbi) : AppConfigAuditRepos
                 """
             )
                 .bind("applicationName", applicationName)
-                .bind("domain", domain)
+                .bind(COLUMN, domain)
                 .bind("limit", limit)
                 .map(AppConfigAuditRowMapper())
                 .list()
@@ -80,7 +84,7 @@ class AppConfigAuditRepositoryImpl(private val jdbi: Jdbi) : AppConfigAuditRepos
                 """
             )
                 .bind("applicationName", audit.applicationName)
-                .bind("domain", audit.domain)
+                .bind(COLUMN, audit.domain)
                 .bind("propertyKey", audit.propertyKey)
                 .bind("oldPropertyValue", audit.oldPropertyValue)
                 .bind("newPropertyValue", audit.newPropertyValue)
@@ -88,7 +92,7 @@ class AppConfigAuditRepositoryImpl(private val jdbi: Jdbi) : AppConfigAuditRepos
                 .bind("updatedBy", audit.updatedBy)
                 .bind("updatedTm", java.sql.Timestamp(audit.updatedTm.toEpochMilliseconds()))
                 .bind("versionNumber", audit.versionNumber)
-                .executeAndReturnGeneratedKeys("id")
+                .executeAndReturnGeneratedKeys(APPCONF_ID)
                 .mapTo(Long::class.java)
                 .one()
         }

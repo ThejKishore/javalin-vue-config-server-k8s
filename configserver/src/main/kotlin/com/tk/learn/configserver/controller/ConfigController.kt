@@ -1,18 +1,19 @@
 package com.tk.learn.configserver.controller
 
+import com.tk.learn.configserver.service.ConfigService
+import com.tk.learn.domain.dto.PropertyCreateRequest
+import com.tk.learn.domain.dto.PropertyUpdateRequest
 import io.javalin.http.Context
 import io.javalin.http.HttpStatus
-import com.tk.learn.configserver.service.ConfigService
-import com.tk.learn.domain.dto.*
-import com.fasterxml.jackson.databind.ObjectMapper
+
+private const val DOMAIN = "domain"
+private const val APPLICATION = "application"
+private const val PROPERTY_KEY = "propertyKey"
 
 /**
  * REST Controller for configuration management endpoints
  */
-class ConfigController(
-    private val configService: ConfigService,
-    private val objectMapper: ObjectMapper
-) {
+class ConfigController(private val configService: ConfigService) {
 
     /**
      * GET /config/yml/{domain}/{application}
@@ -20,8 +21,8 @@ class ConfigController(
      */
     fun getConfigYaml(ctx: Context) {
         try {
-            val domain = ctx.pathParam("domain")
-            val application = ctx.pathParam("application")
+            val domain = ctx.pathParam(DOMAIN)
+            val application = ctx.pathParam(APPLICATION)
 
             if (domain.isBlank() || application.isBlank()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -48,8 +49,8 @@ class ConfigController(
      */
     fun getConfigSync(ctx: Context) {
         try {
-            val domain = ctx.pathParam("domain")
-            val application = ctx.pathParam("application")
+            val domain = ctx.pathParam(DOMAIN)
+            val application = ctx.pathParam(APPLICATION)
 
             if (domain.isBlank() || application.isBlank()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -90,8 +91,8 @@ class ConfigController(
      */
     fun getProperties(ctx: Context) {
         try {
-            val domain = ctx.pathParam("domain")
-            val application = ctx.pathParam("application")
+            val domain = ctx.pathParam(DOMAIN)
+            val application = ctx.pathParam(APPLICATION)
 
             if (domain.isBlank() || application.isBlank()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -117,8 +118,8 @@ class ConfigController(
      */
     fun updateProperties(ctx: Context) {
         try {
-            val domain = ctx.pathParam("domain")
-            val application = ctx.pathParam("application")
+            val domain = ctx.pathParam(DOMAIN)
+            val application = ctx.pathParam(APPLICATION)
 
             if (domain.isBlank() || application.isBlank()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -155,8 +156,8 @@ class ConfigController(
      */
     fun addProperty(ctx: Context) {
         try {
-            val domain = ctx.pathParam("domain")
-            val application = ctx.pathParam("application")
+            val domain = ctx.pathParam(DOMAIN)
+            val application = ctx.pathParam(APPLICATION)
 
             if (domain.isBlank() || application.isBlank()) {
                 ctx.status(HttpStatus.BAD_REQUEST)
@@ -185,13 +186,81 @@ class ConfigController(
     }
 
     /**
+     * DELETE /config/properties/{domain}/{application}/{propertyKey}
+     * Delete a specific property
+     */
+    fun deleteProperty(ctx: Context) {
+        try {
+            val domain = ctx.pathParam(DOMAIN)
+            val application = ctx.pathParam(APPLICATION)
+            val propertyKey = ctx.pathParam(PROPERTY_KEY)
+
+            if (domain.isBlank() || application.isBlank() || propertyKey.isBlank()) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                ctx.json(mapOf("error" to "Domain, application, and property key are required"))
+                return
+            }
+
+            val response = configService.deleteProperty(application, domain, propertyKey)
+            ctx.json(response)
+            ctx.status(HttpStatus.OK)
+        } catch (e: IllegalArgumentException) {
+            ctx.status(HttpStatus.BAD_REQUEST)
+            ctx.json(mapOf("error" to e.message))
+        } catch (e: Exception) {
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            ctx.json(mapOf("error" to "Failed to delete property: ${e.message}"))
+        }
+    }
+
+    /**
+     * POST /config/onboard
+     * Onboard a new service with configuration file (properties or YAML)
+     */
+    fun onboardService(ctx: Context) {
+        try {
+            val domain = ctx.formParam(DOMAIN)?.trim()
+            val application = ctx.formParam(APPLICATION)?.trim()
+            val uploadedFile = ctx.uploadedFile("file")
+
+            if (domain.isNullOrBlank()) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                ctx.json(mapOf("error" to "Domain is required"))
+                return
+            }
+
+            if (application.isNullOrBlank()) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                ctx.json(mapOf("error" to "Application name is required"))
+                return
+            }
+
+            if (uploadedFile == null) {
+                ctx.status(HttpStatus.BAD_REQUEST)
+                ctx.json(mapOf("error" to "Configuration file is required"))
+                return
+            }
+
+            val response = configService.onboardService(domain, application, uploadedFile)
+            ctx.json(response)
+            ctx.status(HttpStatus.CREATED)
+        } catch (e: IllegalArgumentException) {
+            ctx.status(HttpStatus.BAD_REQUEST)
+            ctx.json(mapOf("error" to e.message))
+        } catch (e: Exception) {
+            ctx.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            ctx.json(mapOf("error" to "Failed to onboard service: ${e.message}"))
+        }
+    }
+
+    /**
      * GET /config/audit/{domain}/{application}
      * Returns audit history
      */
     fun getAuditHistory(ctx: Context) {
         try {
-            val domain = ctx.pathParam("domain")
-            val application = ctx.pathParam("application")
+            val domain = ctx.pathParam(DOMAIN)
+            val application = ctx.pathParam(APPLICATION)
             val limit = ctx.queryParam("limit")?.toIntOrNull() ?: 100
 
             if (domain.isBlank() || application.isBlank()) {

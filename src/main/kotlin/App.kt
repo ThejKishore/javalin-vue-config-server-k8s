@@ -104,6 +104,8 @@ private fun configureRoutes(app: Javalin, configController: ConfigController) {
     app.get("/api/config/properties/{domain}/{application}", configController::getProperties)
     app.put("/api/config/properties/{domain}/{application}", configController::updateProperties)
     app.post("/api/config/properties/{domain}/{application}", configController::addProperty)
+    app.delete("/api/config/properties/{domain}/{application}/{propertyKey}", configController::deleteProperty)
+    app.post("/api/config/onboard", configController::onboardService)
     app.get("/api/config/audit/{domain}/{application}", configController::getAuditHistory)
 }
 

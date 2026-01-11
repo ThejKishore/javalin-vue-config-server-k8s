@@ -2,10 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1F2937">
+    <meta name="description" content="Platform Configuration Management System">
     <title>Platform Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* Responsive improvements */
+        @media (max-width: 640px) {
+            body {
+                font-size: 16px; /* Prevents auto-zoom on iOS */
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Better touch targets on mobile */
+        @media (max-width: 640px) {
+            button, input, select, textarea {
+                min-height: 44px;
+                min-width: 44px;
+            }
+        }
+
+        /* Prevent horizontal scroll */
+        body {
+            overflow-x: hidden;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <div id="app"></div>

@@ -1,48 +1,48 @@
 import ApiClient from '../services/ApiClient.js';
+import Autocomplete from './Autocomplete.js';
 
 export default {
+    components: {
+        Autocomplete
+    },
     template: `
         <div class="space-y-6">
             <!-- Selection Controls -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-lg shadow p-4 md:p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                     <!-- Domain Selector -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Domain</label>
-                        <select 
+                        <Autocomplete 
                             v-model="selectedDomain"
-                            @change="onDomainChange"
+                            :items="domains"
                             :disabled="loadingMetadata"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">{{ loadingMetadata ? 'Loading domains...' : 'Select a domain' }}</option>
-                            <option v-for="domain in domains" :key="domain" :value="domain">
-                                {{ domain }}
-                            </option>
-                        </select>
+                            :loading="loadingMetadata"
+                            placeholder="Type to search..."
+                            label="Domain"
+                            @select="onDomainChange"
+                        />
                     </div>
                     
                     <!-- Application Selector -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Application</label>
-                        <select 
+                        <Autocomplete 
                             v-model="selectedApplication"
+                            :items="applicationsForDomain"
                             :disabled="!selectedDomain || loadingMetadata"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">{{ !selectedDomain ? 'Select a domain first' : 'Select an application' }}</option>
-                            <option v-for="app in applicationsForDomain" :key="app" :value="app">
-                                {{ app }}
-                            </option>
-                        </select>
+                            :loading="loadingMetadata"
+                            placeholder="Type to search..."
+                            label="Application"
+                        />
                     </div>
                     
                     <!-- Load Button -->
-                    <div class="flex items-end">
+                    <div class="flex items-end col-span-1 sm:col-span-2 lg:col-span-2">
                         <button 
                             @click="loadProperties"
                             :disabled="loading || !selectedDomain || !selectedApplication"
-                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 font-medium"
+                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 font-medium transition-colors"
                         >
                             {{ loading ? 'Loading...' : 'Load Properties' }}
                         </button>
@@ -56,8 +56,8 @@ export default {
             </div>
             
             <!-- Version Info -->
-            <div v-if="syncInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div class="grid grid-cols-3 gap-4">
+            <div v-if="syncInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-4 md:p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <p class="text-xs text-blue-600 font-medium">Version</p>
                         <p class="text-lg font-bold text-blue-900">{{ syncInfo.versionNumber }}</p>
@@ -73,31 +73,32 @@ export default {
                 </div>
             </div>
             
-            <!-- Properties Table -->
-            <div v-if="properties.length > 0" class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="w-full">
+            <!-- Properties Table - Responsive -->
+            <div v-if="properties.length > 0" class="bg-white rounded-lg shadow overflow-x-auto">
+                <!-- Desktop Table -->
+                <table class="hidden md:table w-full">
                     <thead class="bg-gray-100 border-b">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Property Key</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Value</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Updated By</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Updated</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Actions</th>
+                            <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Property Key</th>
+                            <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Value</th>
+                            <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Updated By</th>
+                            <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Updated</th>
+                            <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y">
                         <tr v-for="prop in properties" :key="prop.propertyKey" class="hover:bg-gray-50">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ prop.propertyKey }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">
+                            <td class="px-4 md:px-6 py-4 text-sm font-medium text-gray-900">{{ prop.propertyKey }}</td>
+                            <td class="px-4 md:px-6 py-4 text-sm text-gray-600">
                                 <input 
                                     v-model="editedProperties[prop.propertyKey]"
                                     type="text"
                                     class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500"
                                 />
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ prop.updatedBy }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(prop.updatedTm) }}</td>
-                            <td class="px-6 py-4 text-sm space-x-2">
+                            <td class="px-4 md:px-6 py-4 text-sm text-gray-600">{{ prop.updatedBy }}</td>
+                            <td class="px-4 md:px-6 py-4 text-sm text-gray-600">{{ formatDate(prop.updatedTm) }}</td>
+                            <td class="px-4 md:px-6 py-4 text-sm space-x-2">
                                 <button 
                                     @click="deleteProperty(prop.propertyKey)"
                                     class="text-red-600 hover:text-red-900 font-medium"
@@ -108,19 +109,53 @@ export default {
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- Mobile Card View -->
+                <div class="md:hidden divide-y">
+                    <div v-for="prop in properties" :key="prop.propertyKey" class="p-4 border-b hover:bg-gray-50">
+                        <div class="mb-3">
+                            <p class="text-xs font-medium text-gray-500 uppercase">Property Key</p>
+                            <p class="font-semibold text-gray-900">{{ prop.propertyKey }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <p class="text-xs font-medium text-gray-500 uppercase">Value</p>
+                            <input 
+                                v-model="editedProperties[prop.propertyKey]"
+                                type="text"
+                                class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 text-sm"
+                            />
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 uppercase">Updated By</p>
+                                <p class="text-sm text-gray-600">{{ prop.updatedBy }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 uppercase">Updated</p>
+                                <p class="text-sm text-gray-600">{{ formatDate(prop.updatedTm) }}</p>
+                            </div>
+                        </div>
+                        <button 
+                            @click="deleteProperty(prop.propertyKey)"
+                            class="w-full text-red-600 hover:text-red-900 font-medium text-sm py-2"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
                 
                 <!-- Update Button -->
-                <div class="bg-gray-50 px-6 py-4 border-t flex justify-end space-x-3">
+                <div class="bg-gray-50 px-4 md:px-6 py-4 border-t flex flex-col sm:flex-row gap-3 justify-end">
                     <button 
                         @click="resetEdits"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium w-full sm:w-auto"
                     >
                         Reset
                     </button>
                     <button 
                         @click="saveChanges"
                         :disabled="updateLoading"
-                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 font-medium"
+                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 font-medium w-full sm:w-auto"
                     >
                         {{ updateLoading ? 'Saving...' : 'Publish Changes' }}
                     </button>
@@ -128,14 +163,14 @@ export default {
             </div>
             
             <!-- Empty State -->
-            <div v-if="!loading && properties.length === 0 && syncInfo" class="bg-gray-50 rounded-lg p-8 text-center">
+            <div v-if="!loading && properties.length === 0 && syncInfo" class="bg-gray-50 rounded-lg p-6 md:p-8 text-center">
                 <p class="text-gray-500">No properties found. Use the form below to add one.</p>
             </div>
             
             <!-- Add New Property -->
-            <div v-if="syncInfo" class="bg-white rounded-lg shadow p-6">
+            <div v-if="syncInfo" class="bg-white rounded-lg shadow p-4 md:p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Property</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     <input 
                         v-model="newProperty.key"
                         type="text"
@@ -151,7 +186,7 @@ export default {
                     <button 
                         @click="addProperty"
                         :disabled="!newProperty.key || !newProperty.value || addLoading"
-                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 font-medium"
+                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 font-medium w-full"
                     >
                         {{ addLoading ? 'Adding...' : 'Add Property' }}
                     </button>
@@ -193,8 +228,27 @@ export default {
     },
     mounted() {
         this.fetchMetadata();
+
+        // Listen for service-onboarded event from ServiceOnboard component
+        window.addEventListener('service-onboarded', this.handleServiceOnboarded);
+    },
+    beforeUnmount() {
+        // Clean up event listener
+        window.removeEventListener('service-onboarded', this.handleServiceOnboarded);
     },
     methods: {
+        handleServiceOnboarded(event) {
+            // Auto-populate domain and application from the event
+            const { domain, application } = event.detail;
+            this.selectedDomain = domain;
+            this.selectedApplication = application;
+
+            // Auto-load the properties for the newly onboarded service
+            this.$nextTick(() => {
+                this.loadProperties();
+            });
+        },
+
         async fetchMetadata() {
             this.loadingMetadata = true;
             this.error = null;
@@ -312,10 +366,30 @@ export default {
                 return;
             }
 
-            // In a real app, you'd call an API endpoint to delete
-            // For now, just remove from edited properties and mark for deletion
-            this.editedProperties[key] = null; // Mark for deletion
-            await this.saveChanges();
+            this.updateLoading = true;
+            this.error = null;
+
+            try {
+                const response = await ApiClient.deleteProperty(
+                    this.selectedDomain,
+                    this.selectedApplication,
+                    key
+                );
+
+                // Update properties and sync info from response
+                this.properties = response.properties;
+                this.syncInfo = response.syncInfo;
+                this.editedProperties = {};
+
+                // Re-initialize edited properties
+                this.properties.forEach(prop => {
+                    this.editedProperties[prop.propertyKey] = prop.propertyValue;
+                });
+            } catch (err) {
+                this.error = err.message || 'Failed to delete property';
+            } finally {
+                this.updateLoading = false;
+            }
         },
 
         resetEdits() {
