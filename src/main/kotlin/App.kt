@@ -29,9 +29,11 @@ fun main() {
 
     // Create and configure Javalin app
     val app = Javalin.create { config ->
-//        config.registerPlugin(MicrometerPlugin())
         config.jsonMapper(createJacksonMapper(objectMapper))
-        config.staticFiles.add("/public")
+        config.staticFiles.add { staticFileConfig ->
+            staticFileConfig.hostedPath = "/admin/ui"
+            staticFileConfig.directory = "/public"
+        }
     }.start(7070)
 
     // Configure routes
@@ -93,20 +95,21 @@ private fun createJacksonMapper(objectMapper: ObjectMapper): JsonMapper {
     }
 }
 
+private const val API_CONFIG = "/api/config"
+
 /**
  * Configure all REST API routes
  */
 private fun configureRoutes(app: Javalin, configController: ConfigController) {
     // Configuration endpoints
-    app.get("/api/config/yml/{domain}/{application}", configController::getConfigYaml)
-    app.get("/api/config/sync/{domain}/{application}", configController::getConfigSync)
-    app.get("/api/config/meta", configController::getMetadata)
-    app.get("/api/config/properties/{domain}/{application}", configController::getProperties)
-    app.put("/api/config/properties/{domain}/{application}", configController::updateProperties)
-    app.post("/api/config/properties/{domain}/{application}", configController::addProperty)
-    app.delete("/api/config/properties/{domain}/{application}/{propertyKey}", configController::deleteProperty)
-    app.post("/api/config/onboard", configController::onboardService)
-    app.get("/api/config/audit/{domain}/{application}", configController::getAuditHistory)
+    app.get("$API_CONFIG/yml/{domain}/{application}", configController::getConfigYaml)
+    app.get("$API_CONFIG/sync/{domain}/{application}", configController::getConfigSync)
+    app.get("$API_CONFIG/meta", configController::getMetadata)
+    app.get("$API_CONFIG/properties/{domain}/{application}", configController::getProperties)
+    app.put("$API_CONFIG/properties/{domain}/{application}", configController::updateProperties)
+    app.post("$API_CONFIG/properties/{domain}/{application}", configController::addProperty)
+    app.delete("$API_CONFIG/properties/{domain}/{application}/{propertyKey}", configController::deleteProperty)
+    app.post("$API_CONFIG/onboard", configController::onboardService)
+    app.get("$API_CONFIG/audit/{domain}/{application}", configController::getAuditHistory)
 }
-
 
